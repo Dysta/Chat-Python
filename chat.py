@@ -122,7 +122,7 @@ while True:
                     if pseudo != "":
                         user_to_kill = getUserByPseudo(user_list, pseudo_to_kill)
                         if user_to_kill != None:
-                            user_to_kill.client.send("Vous avez ete exclu par " + str(user.pseudo) + "\n".encode())
+                            user_to_kill.client.send("Vous avez ete exclu par {} \n".format(user.pseudo).encode())
                             user_list.remove(user_to_kill)
                             user_to_kill.client.close()
                     else:
