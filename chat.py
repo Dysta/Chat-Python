@@ -8,15 +8,28 @@ class User:
         self.addr = addr
         self.logged = False
         self.pseudo = None
-        self.canal = []
+        self.canal = None
 
 def clear_n(stri):
     return stri.replace('\n', '')
 
-def sendtoall(data, userlist, sender):
+def clear_esp(stri):
+    return stri.replace(' ', '')
+
+def sendToCanal(data, userlist, canal):
+    if canal == None:
+        return
     for user in userlist:
-        #if client != sender:
-        user.client.send(data.encode())
+        if user.logged and user.canal == canal :
+            sendToUser(data, user) 
+
+def sendToAll(data, userlist, sender):
+    for user in userlist:
+        if user.logged : #and user != sender
+            sendToUser(data, user)
+
+def sendToUser(data, user):
+    user.client.send(data.encode())
 
 
 def getUserByPseudo(userlist, pseudo):
@@ -52,18 +65,29 @@ while True:
         data_a = clear_n(data).split(" ", 1)
 
         if(data_a[0].upper() == "JOIN"):
-            if not user.logged :
-                sendtoall("JOIN : {} \n".format(user.addr), user_list, None)
-                user.logged = True
-            else :
-                user.client.send("Deja connecte\n".encode())
+            if user.canal == None or not user.logged:
+                if len(data_a) > 1:
+                    canal = clear_esp(data_a[1])
+                    if canal != "":
+                        user.canal = canal
+                        user.logged = True
+                        sendToCanal("JOIN : {} \n".format(user.addr), user_list, canal)
+                    else :
+                        sendToUser("Vous n'avez pas saisi de canal\n", user)
+                else:
+                    sendToUser("Vous n'avez pas saisi de canal\n", user)
+            else:
+                sendToUser("Vous etes deja connecte\n", user)
 
         if(data_a[0].upper() == "PART"):
             if user.logged :
                 user.logged = False
-                sendtoall("PART : L'utilisateur {} est parti \n".format(user.pseudo), user_list, None)
+                old_canal = user.canal
+                user.canal = None
+                sendToCanal("PART : L'utilisateur {} est parti \n".format(user.pseudo), user_list, old_canal)
+                sendToUser("Vous etes deconnecte du canal\n", user)
             else :
-                user.client.send("Connecte nulle part\n".encode())
+                sendToUser("Connecte nulle part\n", user)
 
         if(len(data) == 0 or data_a[0].upper() == "QUIT"):
             user.client.close()
@@ -71,64 +95,85 @@ while True:
         
         if(data_a[0].upper() == "MSG"):
             if not user.logged :
-                user.client.send("Vous n'etes pas connecte\n".encode())
+                sendToUser("Vous n'etes pas connecte\n", user)
             elif user.pseudo == None :
-                user.client.send("Vous n'avez pas de pseudo\n".encode())
+                sendToUser("Vous n'avez pas de pseudo\n", user)
+            elif user.canal == None :
+                sendToUser("Vous n'avez pas de canal\n", user)
             else :
                 data = data_a[1].encode("UTF-8")
                 if(data != ""):
-                    sendtoall(data + "\n", user_list, client)
+                    sendToCanal("{}({}) : {}\n".format(user.pseudo, user.canal, data), user_list, user.canal)
         
         if(data_a[0].upper() == "NICK"):
-            if not user.pseudo == None:
-                user.client.send("Vous avez deja un pseudo\n".encode())
+            if user.pseudo != None:
+                sendToUser("Vous avez deja un pseudo\n", user)
             elif not user.logged:
-                user.client.send("Vous n'etes pas connecte\n".encode())
+                sendToUser("Vous n'etes pas connecte\n", user)
             else:
                 if len(data_a) > 1:
-                    pseudo = data_a[1].replace(" ", "")
+                    pseudo = clear_esp(data_a[1])
                     if pseudo != "":
                         if getUserByPseudo(user_list, pseudo) == None :
                             user.pseudo = pseudo
-                            user.client.send("Vous etes maintenant connus sous le pseudo de {} \n".format(user.pseudo).encode())
+                            sendToUser("Vous etes maintenant connus sous le pseudo de {} \n".format(user.pseudo), user)
                         else:
-                            user.client.send("Pseudo deja utilise\n".encode())
+                            sendToUser("Pseudo deja utilise\n", user)
                     else:
-                        user.client.send("Vous n'avez rien indique\n".encode())
+                        sendToUser("Vous n'avez rien indique\n", user)
                 else:
-                    user.client.send("Vous n'avez rien indique\n".encode())
+                    sendToUser("Vous n'avez rien indique\n", user)
         
         if(data_a[0].upper() == "LIST"):
             if not user.logged:
-                user.client.send("Vous n'etes pas connecte\n".encode())
+                sendToUser("Vous n'etes pas connecte\n", user)
             else:
-                user.client.send("Liste des utilisateurs en ligne :\n".encode())
+                sendToUser("Liste des utilisateurs en ligne :\n", user)
                 user_logged = ""
                 for user_co in user_list:
                     if user_co.logged:
-                        user_logged += "{}\n".format(user_co.pseudo)
+                        user_logged += "{} - canal : {}\n".format(user_co.pseudo, user_co.canal)
                 if user_logged != "" :
-                    user.client.send(user_logged.encode())
+                    sendToUser(user_logged, user)
                 else:
-                    user.client.send("Aucun utilisateur en ligne actuellement\n".encode())
+                    sendToUser("Aucun utilisateur en ligne actuellement\n", user)
 
-        if(data_a[0].upper() == "KILL"):
-            
+        if(data_a[0].upper() == "KICK"):
             if not user.logged:
-                user.client.send("Vous n'etes pas connecte\n".encode())
+                sendToUser("Vous n'etes pas connecte\n", user)
             else:
                 if len(data_a) > 1:
-                    pseudo_to_kill = data_a[1].replace(" ", "")
+                    pseudo = clear_esp(data_a[1])
                     if pseudo != "":
-                        user_to_kill = getUserByPseudo(user_list, pseudo_to_kill)
+                        user_to_kick = getUserByPseudo(user_list, pseudo)
+                        if user_to_kick != None and user_to_kick.canal == user.canal:
+                            user_to_kick.canal = None
+                            sendToUser("Vous avez ete exclu par {} \n".format(user.pseudo), user_to_kick)
+                        else:
+                            sendToUser("Utilisateur non trouve, verifiez que vous etes sur le meme canal\n", user)
+                    else:
+                        sendToUser("Vous n'avez rien indique\n", user)
+                else:
+                    sendToUser("Vous n'avez rien indique\n", user)
+        
+        if(data_a[0].upper() == "KILL"):
+            if not user.logged:
+                sendToUser("Vous n'etes pas connecte\n", user)
+            else:
+                if len(data_a) > 1:
+                    pseudo = clear_esp(data_a[1])
+                    if pseudo != "":
+                        user_to_kill = getUserByPseudo(user_list, pseudo)
                         if user_to_kill != None:
-                            user_to_kill.client.send("Vous avez ete exclu par {} \n".format(user.pseudo).encode())
+                            sendToUser("Vous avez ete exclu par {} \n".format(user.pseudo), user_to_kill)
                             user_list.remove(user_to_kill)
                             user_to_kill.client.close()
+                        else:
+                            sendToUser("Utilisateur non trouve\n", user)
                     else:
-                        user.client.send("Vous n'avez rien indique\n".encode())
+                        sendToUser("Vous n'avez rien indique\n", user)
                 else:
-                    user.client.send("Vous n'avez rien indique\n".encode())
+                    sendToUser("Vous n'avez rien indique\n", user)
 
 
 
