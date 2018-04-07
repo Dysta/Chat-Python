@@ -58,7 +58,7 @@ client_list = [] #contain all socket client
 client_list.append(main_co)
 
 while True:
-    client_queue, wlist, xlist = select.select(client_list, [], [], 0.05)
+    client_queue, wlist, elist = select.select(client_list, [], [], 0.05)
     for client in client_queue :
         if client == main_co : #if we have a new client
             try:
@@ -68,7 +68,6 @@ while True:
                 user_list.append(new_user)
             except socket.error as msg:
                 print("Unable to accept.\n" + str(msg))
-                sys.exit(1)
     
         else : #we receive a message
             user = getUserByClient(user_list, client)
