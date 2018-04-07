@@ -10,9 +10,6 @@ class User:
         self.pseudo = None
         self.canal = None
 
-    def fileno(self):
-        return self.socket.fileno()
-
 def clear_n(stri):
     return stri.replace('\n', '')
 
@@ -69,9 +66,9 @@ while True:
                 client_list.append(client_co)
                 new_user = User(client_co, client_addr[0])
                 user_list.append(new_user)
-                print("New user join !\n")
             except socket.error as msg:
                 print("Unable to accept.\n" + str(msg))
+                sys.exit(1)
     
         else : #we receive a message
             user = getUserByClient(user_list, client)
