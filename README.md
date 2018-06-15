@@ -9,8 +9,6 @@ Une fois ceci de fait, lancez un second terminal et effectuez la commande **nc l
 En cours..
 
 ## Commandes
-Voici les commandes du chat :
-
 > JOIN \<canal> # permet de rejoindre un canal de son choix<br>
 > PART # permet de partir d'un canal<br>
 > QUIT # deconnecte du serveur<br>
