@@ -1,9 +1,12 @@
 # Chat-Python
 Écris en Python 3 pour un mini projet de réseau donné par la fac.<br>
 
-### Usage
+## Usage
+### Linux 
 Clonez le repos puis faite un **chmod +x** sur le fichier **chat.py** et enfin, lancez le à l'aide de la commande **./chat.py**.<br>
 Une fois ceci de fait, lancez un second terminal et effectuez la commande **nc localhost 7777**. Vous serez alors connecté au chat.
+### Windows
+En cours..
 
 ### Commandes
 Voici les commandes du chat :
@@ -17,8 +20,6 @@ Voici les commandes du chat :
 > KICK \<user> # expulse un utilisateur d'un canal<br>
 > KILL \<user> # expulse un utilisateur du serveur<br>
 
-___
-README édité avec **StackEdit**
 
 
 
