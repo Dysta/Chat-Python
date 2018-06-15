@@ -8,7 +8,7 @@ Une fois ceci de fait, lancez un second terminal et effectuez la commande **nc l
 ### Windows
 En cours..
 
-### Commandes
+## Commandes
 Voici les commandes du chat :
 
 > JOIN \<canal> # permet de rejoindre un canal de son choix<br>
